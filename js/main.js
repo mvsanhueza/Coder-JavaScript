@@ -169,7 +169,17 @@ let dataEjeFuerte = {
   mode: "lines"
 };
 
-Plotly.newPlot("chart", [dataEjeFuerte]);
+let layout = {
+  title: "Curva de interacción eje fuerte",
+  xaxis: {
+    title: "Momento [kgf-m]"    
+  },
+  yaxis: {
+    title: "Carga axial [kgf]"
+  },
+}
+
+Plotly.newPlot("chart", [dataEjeFuerte], layout);
 
 
 
