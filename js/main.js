@@ -4,7 +4,7 @@ import "https://cdn.plot.ly/plotly-2.16.3.min.js"
 
 //Linspace para generar array de datos
 function linspace(start, end, n){
-  let array = [];
+  const array = [];
   let step = (end - start) / (n-1);
   for(let i = 0; i < n; i++){
     array.push(i*step + start);
@@ -13,13 +13,16 @@ function linspace(start, end, n){
   return array;
 }
 
-//Constructor de una barra (diametro en mm):
-function barra(x, y, Diametro){
+//clase de una barra (diametro en mm):
+class barra{
+  constructor(x,y,Diametro){
   this.x = x;
   this.y = y;
   this.Diametro = Diametro;
   this.Area = Math.PI*Math.pow(Diametro / 20.0,2);
-};
+  }
+}
+
 
 //Pide el ancho de la columna para calcular curva de interaccion
 let ancho;
@@ -53,14 +56,14 @@ const barra2 = new barra(ancho - rec, d, 16);
 const barra3 = new barra(rec, rec, 16);
 const barra4 = new barra(ancho - rec, rec, 16);
 
-let barras = [barra1, barra2, barra3, barra4];
+const barras = [barra1, barra2, barra3, barra4];
 
 //Se definen las deformaciones unitarias con las que se genera la curva de interaccion:
 let eps = [-0.002, 0]; //Def unitarias del acero
 eps = eps.concat(linspace(0.00025,0.02,80));
 eps.push(0.02);
 
-let epc = [];
+const epc = [];
 //Propiedades Acero:
 let fy = 4200; //En kgf/cm2
 let Es = 2.1e6; //En kgf/cm2
@@ -77,7 +80,7 @@ barras.forEach(b=>As += b.Area);
 
 let M = [];
 let P = [];
-let phis = [];
+const phis = [];
 
 let PMax = 0;
 let inter = true;
@@ -150,8 +153,8 @@ P = P.map((p,k)=>p*-phis[k]);
 M = M.map((m,k)=>m*-phis[k] / 100); //kgf-m
 
 //Se agregan los mismos puntos al revez y M invertido por simetria de seccion:
-let PRev = [...P];
-let MRev = M.map(x=>x * -1); 
+const PRev = [...P];
+const MRev = M.map(x=>x * -1); 
 
 PRev.reverse();
 MRev.reverse();
