@@ -30,10 +30,42 @@
             </h1>
         </div>
     </div>
+    <div class="container style_title">
+        <h2>Sección</h2>
+    </div>
+    <div class="container hormigon">       
+        <div class="row">
+            <div class="col-md">
+                <h3>Hormigón</h3>
+                <form>
+                    <div class="form_seccion m-3">
+                        <label class="form_label" for="ancho">Ancho</label>
+                        <input class="form-control" type="number" placeholder="Ancho [cm]" id="ancho" name="ancho">
+                    </div>
+                    <div class="form_seccion m-3">
+                        <label class="form_label" for="alto">Alto</label>
+                        <input class="form-control" type="number" placeholder="Alto [cm]" id="alto" name="alto">
+                    </div>                   
+                </form>
+            </div>
+            <div class="col-md">
 
+            </div>
+        </div>
+        
+    </div>
+    
+    <div class="container">
+        <button type="button" class="btn btn-primary" id="btn_Curva">
+            Generar curva
+        </button>
+    </div>
 
-    <div id="chart" class="chart" style="width: 600px; height: 600px;"></div>
-    <script type="module" src="./js/main.js"></script>
+    <div id="chart" class="chart container" style="width: 600px; height: 600px;"></div>
+    
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.plot.ly/plotly-2.16.1.min.js"></script>
+    <script src="./js/main.js"></script>
 </body>
-
+d
 </html>
