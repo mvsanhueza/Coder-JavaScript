@@ -33,29 +33,36 @@
     <div class="container style_title">
         <h2>Sección</h2>
     </div>
-    <div class="container hormigon">       
-        <div class="row">
+    <section class="container">       
+        <article class="row">
             <div class="col-md">
                 <h3>Hormigón</h3>
                 <form>
                     <div class="form_seccion m-3">
                         <label class="form_label" for="ancho">Ancho</label>
-                        <input class="form-control" type="number" placeholder="Ancho [cm]" id="ancho" name="ancho">
+                        <input class="form-control" type="number"  onkeypress="onlyNumberInt(event)" placeholder="Ancho [cm]" id="ancho" name="ancho">
                     </div>
                     <div class="form_seccion m-3">
                         <label class="form_label" for="alto">Alto</label>
-                        <input class="form-control" type="number" placeholder="Alto [cm]" id="alto" name="alto">
+                        <input class="form-control" type="number" placeholder="Alto [cm]" id="alto" name="alto" onkeypress="onlyNumberInt(event)">
                     </div>                   
                 </form>
             </div>
+        </article>  
+        <article class="row mt-3">
             <div class="col-md">
-
+                <h3>Cargas</h3>
+                <table class="table tabe-striped" id="tableCargas">
+                    <thead>
+                        <th scope="col">P [tonf]</th>
+                        <th scope="col">M [tonf-m]</th>                        
+                    </thead>
+                </table>
             </div>
-        </div>
-        
-    </div>
+        </article>      
+    </section>
     
-    <div class="container">
+    <div class="container d-flex justify-content-center">
         <button type="button" class="btn btn-primary" id="btn_Curva">
             Generar curva
         </button>
