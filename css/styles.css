@@ -87,4 +87,6 @@ input[type=number] {
 
 .inputCargas{
     border: 0px;
+    background-color: transparent;
+    width: 80%;
 }
