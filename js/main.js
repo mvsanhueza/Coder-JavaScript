@@ -6,6 +6,7 @@ const inputAlto = document.getElementById('alto');
 const btnCurva = document.getElementById('btn_Curva');
 const chart = document.getElementById('chart');
 const tableCargas = document.getElementById('tableCargas');
+const addCarga = document.getElementById('btn_addCarga')
 
 
 // ----- CLASES
@@ -178,6 +179,18 @@ function saveSessionStorageJSON(name, object) {
   sessionStorage.setItem(name, JSON.stringify(object));
 }
 function plotCargasTable(cargas) {
+
+  let childs = tableCargas.childElementCount;
+  let childsRemove = [];
+  for(let i = 1; i < childs; i++){
+    let child = tableCargas.children[i];
+    childsRemove.push(child);
+  }
+
+  for (const child of childsRemove) {
+    tableCargas.removeChild(child);
+  }
+
   for (const carga of cargas) {
     tableCargas.innerHTML +=
       `<tr>
@@ -186,6 +199,11 @@ function plotCargasTable(cargas) {
     </td>
     <td>
     <input class="inputCargas" type="text" value=${carga.M} onkeyup="cargaChanged(this)">
+    </td>
+    <td>
+    <button type="button" class="btn_removeCarga" onclick="cargaRemove(this)">
+      <i class="bi bi-dash-circle-fill removeCarga"></i>
+    </button>    
     </td>
     </tr>`;
   }
@@ -223,6 +241,36 @@ function cargaChanged(input) {
 
   actualizarCargas();
   plotCurva();
+}
+
+function cargaAdd(){
+//Se agrega una carga a la lista de cargas:
+let cargas = readSessionStorageJSON('cargas');
+cargas.push(new carga(0,0));
+plotCargasTable(cargas);
+saveSessionStorageJSON('cargas',cargas);
+plotCurva();
+}
+
+function cargaRemove(carga){
+  //Se busca el parent para identificar el row correspondiente:
+  const parent = carga.parentElement;
+  const parentParent = parent.parentElement;
+
+  let rowIndex = parentParent.rowIndex;
+
+  //Se elimina la carga correspondiente:
+  let cargas = readSessionStorageJSON('cargas');
+
+  //No se elimina cuando queda un elemento (siempre debe haber alguna carga)
+  if(cargas.length > 1){
+    let removed = cargas.splice(rowIndex - 1, 1);
+    saveSessionStorageJSON('cargas',cargas);
+    plotCargasTable(cargas);
+    plotCurva();
+  }
+
+  console.log("Buscando parent");
 }
 
 function actualizarCargas() {
@@ -309,6 +357,7 @@ btnCurva.addEventListener('click', () => {
 
   genCurvaInteraccion(ancho, alto)
 })
+
 
 //Se crea la lista de las cargas en caso que no exista:
 const cargas = readSessionStorageJSON('cargas') ?? [new carga(0, 0)];

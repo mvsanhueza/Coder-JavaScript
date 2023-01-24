@@ -90,3 +90,37 @@ input[type=number] {
     background-color: transparent;
     width: 80%;
 }
+
+.tableMW{
+    max-width: 500px;
+}
+
+
+.addCarga{
+    color: green;   
+}
+
+.addCargaBtn{
+    background-color: transparent;
+    border: 0px;
+    transition: all 0.3s ease-in-out;
+}
+
+.addCargaBtn:hover{
+    scale: 1.2;
+}
+
+.removeCarga{
+    color: red;
+}
+
+
+.btn_removeCarga{
+    background-color: transparent;
+    border: 0px;
+    transition: all 0.3s ease-in-out;
+}
+
+.btn_removeCarga:hover{
+    scale: 1.2;
+}
