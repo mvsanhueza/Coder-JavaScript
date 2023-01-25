@@ -3,20 +3,20 @@
 
 const inputAncho = document.getElementById('ancho');
 const inputAlto = document.getElementById('alto');
-const btnCurva = document.getElementById('btn_Curva');
 const chart = document.getElementById('chart');
 const tableCargas = document.getElementById('tableCargas');
-const addCarga = document.getElementById('btn_addCarga')
+const addCarga = document.getElementById('btn_addCarga');
+const tableBarras = document.getElementById('tableBarras');
 
 
 // ----- CLASES
 //clase de una barra (diametro en mm):
 class barra {
-  constructor(x, y, Diametro) {
-    this.x = x;
+  constructor(n, y, Diametro) {
+    this.n = n;
     this.y = y;
     this.Diametro = Diametro;
-    this.Area = Math.PI * Math.pow(Diametro / 20.0, 2);
+    this.Area = n * Math.PI * Math.pow(Diametro / 20.0, 2);
   }
 }
 
@@ -41,17 +41,20 @@ function linspace(start, end, n) {
   return array;
 }
 //Funcion para generar curva de interacción:
-function genCurvaInteraccion(ancho, alto) {
-  let rec = 2;
-  let d = alto - rec;
+function genCurvaInteraccion() {
+  
+  let ancho = parseInt(inputAncho.value);
+  let alto = parseInt(inputAlto.value);
+
+  let d = alto - 2;
 
   //Se asume armadura 2 phi 16 superior e inferior con recubrimiento de 2cm para primera entrega:
-  const barra1 = new barra(rec, d, 16);
-  const barra2 = new barra(ancho - rec, d, 16);
-  const barra3 = new barra(rec, rec, 16);
-  const barra4 = new barra(ancho - rec, rec, 16);
+  // const barra1 = new barra(rec, d, 16);
+  // const barra2 = new barra(ancho - rec, d, 16);
+  // const barra3 = new barra(rec, rec, 16);
+  // const barra4 = new barra(ancho - rec, rec, 16);
 
-  const barras = [barra1, barra2, barra3, barra4];
+  const barras = readSessionStorageJSON('barras');
 
   //Se definen las deformaciones unitarias con las que se genera la curva de interaccion:
   let eps = [-0.002, 0]; //Def unitarias del acero
@@ -157,8 +160,7 @@ function genCurvaInteraccion(ancho, alto) {
 
   const curva = [P, M];
   saveSessionStorageJSON('curva', curva);
-  plotCurva();
-  
+  plotCurva();  
 }
 function isMayor10(dimension) {
   if (dimension <= 10) {
@@ -207,6 +209,99 @@ function plotCargasTable(cargas) {
     </td>
     </tr>`;
   }
+}
+function plotBarrasTable(barras){
+  let childs = tableBarras.childElementCount;
+  let childsRemove = [];
+  for(let i = 1; i < childs; i++){
+    let child = tableBarras.children[i];
+    childsRemove.push(child);
+  }
+
+  for (const child of childsRemove) {
+    tableBarras.removeChild(child);
+  }
+
+  for (const barra of barras) {
+    const tr = document.createElement('tr');
+    const tdCant = document.createElement('td');
+
+    //Se genera el select de la primera cantidad de barras:
+    const selectCant = createSelect();
+
+    //Se agregan las opciones de cantidad
+    agregarCantidades(selectCant,barra.n);
+
+    tdCant.appendChild(selectCant);
+    tr.appendChild(tdCant);
+
+    //Se generan los diametros:
+    const tdDiam = document.createElement('td');
+    const selectDiam = createSelect();
+    //se agregan las opciones de diametros:
+    agregarDiametros(selectDiam,barra.Diametro);
+
+    tdDiam.appendChild(selectDiam);
+    tr.appendChild(tdDiam);
+
+    const tdLocation = document.createElement('td');
+    tdLocation.innerHTML = `<input class="inputCargas" type ="number" value=${barra.y} onkeypress="onlyNumberInt(event)" onblur="locationChanged(this)">`    
+
+    tr.appendChild(tdLocation);
+    tableBarras.appendChild(tr);
+  }
+}
+
+function createSelect(){
+  const select = document.createElement('select');
+  select.className = "form-select form-select-sm";
+  select.ariaLabel = ".form-select-sm example";
+  return select;
+}
+
+function agregarCantidades(selector, cantidad){
+  //Se genera una lista de 2 a 5 barras:
+  const cantidades = [2,3,4,5];
+  for (const cant of cantidades) {
+    const opt = document.createElement('option');
+    opt.value = cant;
+    opt.text = cant;
+    if(cant == cantidad)
+    {
+      opt.selected = true;
+    }
+    selector.appendChild(opt);
+  }
+}
+
+function agregarDiametros(selector, diametro){
+  const diametros = [12, 16, 18, 22, 25, 28, 32];
+  for (const diam of diametros) {
+    const opt = document.createElement('option');
+    opt.value = diam;
+    opt.text = diam;
+    if(diam == diametro)
+    {
+      opt.selected = true;
+    }
+    selector.appendChild(opt);
+  }
+}
+
+function locationChanged(input){
+  //Se compara con el alto del elemento
+  const d = parseInt(input.value);
+  const alto = parseInt(inputAlto.value);
+
+  if(d<alto && d > 0){
+    input.classList.remove("error");
+    return;
+  }
+
+  //En caso contrario se abre el sweep:
+  input.classList.add("error")
+  
+  input.focus();
 }
 
 //Solo numeros enteros
@@ -268,9 +363,7 @@ function cargaRemove(carga){
     saveSessionStorageJSON('cargas',cargas);
     plotCargasTable(cargas);
     plotCurva();
-  }
-
-  console.log("Buscando parent");
+  } 
 }
 
 function actualizarCargas() {
@@ -342,30 +435,97 @@ function plotCurva() {
   Plotly.newPlot(chart, [dataEjeFuerte, dataCargas], layout);
 }
 
-//Se define la función para guardar el cambio del valor de ancho:
-btnCurva.addEventListener('click', () => {
+function verifyAnchoAlto() {
   //Primero verifica que el ancho y alto sean mayor a 10 cm:
-  let ancho = inputAncho.value;
-  let alto = inputAlto.value;
+  let ancho = parseInt(inputAncho.value);
+  let alto = parseInt(inputAlto.value);
 
   //se verifica que el ancho sea mayor a 10:
   let verifyAncho = isMayor10(ancho);
   let verifyAlto = isMayor10(alto);
   if (!verifyAncho || !verifyAlto) {
+    return false;
+  }
+  else
+    return true;
+}
+
+alto.addEventListener('blur', ()=>{
+  //Se analiza si alto y ancho tiene valores correctos:
+  let alto = parseInt(inputAlto.value);
+
+  if(!isMayor10(alto)){
+    inputAlto.value = "";
     return;
   }
 
-  genCurvaInteraccion(ancho, alto)
+  let ancho = inputAncho.value;
+
+  if(ancho == ""){
+    return;
+  }
+
+  let rec = 2;
+  
+  let d = alto - rec
+  const barras = readSessionStorageJSON('barras') ?? [new barra(2,d,16), new barra(2,rec,16)];
+
+  //Se actualiza el grafico de barras:
+  plotBarrasTable(barras);
+  saveSessionStorageJSON('barras',barras);
+  
+  genCurvaInteraccion();
 })
 
+ancho.addEventListener('blur',()=>{
+  //Se analiza si alto y ancho tiene valores correctos:
+ let ancho = parseInt(inputAncho.value);
+
+ if(!isMayor10(ancho)){
+    inputAncho.value = "";
+    return;
+ }
+
+ let alto = inputAlto.value;
+
+ if(alto == "" ){
+  return;
+ }
+
+  let rec = 2;
+  let altoInt = parseInt(alto);
+  let d = altoInt - rec
+  const barras = readSessionStorageJSON('barras') ?? [new barra(2,d,16), new barra(2,rec,16)];
+  plotBarrasTable(barras);
+  saveSessionStorageJSON('barras',barras);  
+
+  genCurvaInteraccion();
+})
 
 //Se crea la lista de las cargas en caso que no exista:
 const cargas = readSessionStorageJSON('cargas') ?? [new carga(0, 0)];
+
 
 saveSessionStorageJSON('cargas', cargas);
 //Se plotean las cargas 
 plotCargasTable(cargas);
 
+const barras = readSessionStorageJSON('barras');
+if(barras != null){
+  //Analiza que ancho y alto tengan respuesta:
+  let ancho = inputAncho.value;
+  let alto = inputAlto.value;
+
+  if(ancho == "" || alto == ""){
+    //Se borran las barras existentes:
+    const barrasNew = [];
+    sessionStorage.removeItem('barras');
+    plotBarrasTable([]);
+  }else{
+    plotBarrasTable(barras);
+    genCurvaInteraccion();
+  }  
+}
 
 
 
