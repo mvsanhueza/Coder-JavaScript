@@ -9,9 +9,9 @@
     <script src="https://cdn.plot.ly/plotly-2.16.3.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand&family=Roboto:wght@100;300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">    
     <link rel="stylesheet" href="./css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="./css/styles.css">
@@ -23,77 +23,78 @@
         <a href="index.html"><img src="./assets/img/logo.png" alt="spectrum" width="250"></a>
 
     </header>
-
-    <div class="portada">
-        <div class="portada_back">
-            <h1 class="portada_back_title">
-                Curva de Interacción
-            </h1>
+    <main>
+        <div class="portada">
+            <div class="portada_back">
+                <h1 class="portada_back_title">
+                    Curva de Interacción
+                </h1>
+            </div>
         </div>
-    </div>
-    <div class="container style_title">
-        <h2>Sección</h2>
-    </div>
-    <div class="container">
-        <div class="row">
-            <section class="col container">
-                <article class="row">
-                    <div class="col-md">
-                        <h3>Hormigón</h3>
-                        <form>
-                            <div class="form_seccion m-3">
-                                <label class="form_label" for="ancho">Ancho</label>
-                                <input class="form-control" type="number" onkeypress="onlyNumberInt(event)"
-                                    placeholder="Ancho [cm]" id="ancho" name="ancho">
-                            </div>
-                            <div class="form_seccion m-3">
-                                <label class="form_label" for="alto">Alto</label>
-                                <input class="form-control" type="number" placeholder="Alto [cm]" id="alto" name="alto"
-                                    onkeypress="onlyNumberInt(event)">
-                            </div>
-                        </form>
-                    </div>
-                </article>
-                <article class="row">
-                    <div class="col-md">
-                        <h3 class="mt-1">Refuerzo</h3>
-                        <table class="table table-striped table-responsive-sm" id="tableBarras">
-                            <thead>
-                                <th scope="col">Cantidad</th>
-                                <th scope="col">Diámetro [mm]</th>                        
-                                <th scope="col">Ubicación [cm]</th>
-                            </thead>
-                        </table>
-                    </div>
-                </article>
-            </section>
-            <canvas class="col" id="sectionPlot">
-            </canvas>
+        <div class="container style_title">
+            <h2>Sección</h2>
+        </div>
+        <div class="container">
+            <div class="row">
+                <section class="col container">
+                    <article class="row">
+                        <div class="col-md">
+                            <h3>Hormigón</h3>
+                            <form>
+                                <div class="form_seccion m-3">
+                                    <label class="form_label" for="ancho">Ancho</label>
+                                    <input class="form-control" type="number" onkeypress="onlyNumberInt(event)"
+                                        placeholder="Ancho [cm]" id="ancho" name="ancho">
+                                </div>
+                                <div class="form_seccion m-3">
+                                    <label class="form_label" for="alto">Alto</label>
+                                    <input class="form-control" type="number" placeholder="Alto [cm]" id="alto" name="alto"
+                                        onkeypress="onlyNumberInt(event)">
+                                </div>
+                            </form>
+                        </div>
+                    </article>
+                    <article class="row">
+                        <div class="col-md">
+                            <h3 class="mt-1">Refuerzo</h3>
+                            <table class="table table-striped table-responsive-sm" id="tableBarras">
+                                <thead>
+                                    <th scope="col">Cantidad</th>
+                                    <th scope="col">Diámetro [mm]</th>                        
+                                    <th scope="col">Ubicación [cm]</th>
+                                </thead>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+                <canvas class="col" id="sectionPlot">
+                </canvas>
+            </div>
+            
         </div>
         
-    </div>
     
-
-    <div class="container style_title">
-        <h2>Cargas</h2>
-    </div>
-    <div class="container d-flex flex-column justify-content-start align-items-center">
-        <div class="tableMW d-flex justify-content-end">
-            <table class="table table-striped table-responsive-sm" id="tableCargas">
-                <thead>
-                    <th scope="col">P [tonf]</th>
-                    <th scope="col">M [tonf-m]</th>
-                    <th scope="col">
-                        <button type="button" class="addCargaBtn" onclick="cargaAdd()">
-                            <i class="bi bi-plus-circle-fill addCarga"></i>
-                        </button>
-                    </th>
-                </thead>
-            </table>
+        <div class="container style_title">
+            <h2>Cargas</h2>
         </div>
-    </div>
-
-    <div id="chart" class="chart container" style="width: 600px; height: 600px;"></div>
+        <div class="container d-flex flex-column justify-content-start align-items-center">
+            <div class="tableMW d-flex justify-content-end">
+                <table class="table table-striped table-responsive-sm" id="tableCargas">
+                    <thead>
+                        <th scope="col">P [tonf]</th>
+                        <th scope="col">M [tonf-m]</th>
+                        <th scope="col">
+                            <button type="button" class="addCargaBtn" onclick="cargaAdd()">
+                                <i class="bi bi-plus-circle-fill addCarga"></i>
+                            </button>
+                        </th>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    
+        <div id="chart" class="chart container" style="width: 600px; height: 600px;"></div>
+    </main>    
 
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.plot.ly/plotly-2.16.1.min.js"></script>

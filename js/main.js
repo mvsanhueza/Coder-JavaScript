@@ -313,6 +313,7 @@ function locationChanged(input){
   }
 
   input.value = 5;
+  genWarning("La ubicación debe encontrarse en la columna");
   actualizarBarras();
 }
 
@@ -399,6 +400,9 @@ function cargaRemove(carga){
     plotCargasTable(cargas);
     plotCurva();
   } 
+  else{
+    genWarning('Debe existir al menos una carga');
+  }
 }
 
 function actualizarCargas() {
@@ -533,6 +537,41 @@ function DrawSection(){
       context.stroke();   
     }
   }
+}
+
+function genWarning(message){
+  //Se genera el warning:
+  const plotWarning = (error) =>{
+    return new Promise((resolve,reject)=>{
+      //Se genera un warning message 
+      const div = document.createElement('div');
+      div.className = "alert alert_hide";
+
+      div.innerHTML = `<p class="alert_text">${error}</p>`;
+
+      //Se agrega al main
+      const main = document.getElementsByTagName('main')[0];
+      main.appendChild(div);
+
+      setTimeout(()=>{
+        div.className = "alert";
+      },500);
+
+      setTimeout(() => {
+        div.classList.add('alert_hide');
+        resolve();
+      }, 3000);
+    })
+  }
+  plotWarning(message).then((response)=>{
+    //Se borra el div:
+    setTimeout(()=>{
+      const main = document.getElementsByTagName('main')[0];    
+      const div = main.getElementsByClassName('alert')[0];
+      div.remove();
+    },500)
+    
+  }); 
 }
 
 alto.addEventListener('blur', ()=>{
