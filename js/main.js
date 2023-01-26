@@ -7,6 +7,7 @@ const chart = document.getElementById('chart');
 const tableCargas = document.getElementById('tableCargas');
 const addCarga = document.getElementById('btn_addCarga');
 const tableBarras = document.getElementById('tableBarras');
+const canvas = document.getElementById('sectionPlot');
 
 
 // ----- CLASES
@@ -43,10 +44,11 @@ function linspace(start, end, n) {
 //Funcion para generar curva de interacción:
 function genCurvaInteraccion() {
   
-  let ancho = parseInt(inputAncho.value);
-  let alto = parseInt(inputAlto.value);
+  let ancho = parseInt(inputAncho.value) || 0;
+  let alto = parseInt(inputAlto.value) || 0;
 
-  let d = alto - 2;
+  if(ancho === 0 || alto === 0)
+    return;
 
   //Se asume armadura 2 phi 16 superior e inferior con recubrimiento de 2cm para primera entrega:
   // const barra1 = new barra(rec, d, 16);
@@ -56,6 +58,27 @@ function genCurvaInteraccion() {
 
   const barras = readSessionStorageJSON('barras');
 
+  
+  let PMF = PM("+",ancho,alto,barras);
+  let PMN = PM("-",ancho,alto,barras);
+
+  let [P,M] = PMF;
+  let [PR,MR] = PMN;
+
+  //Se agregan los puntos
+  PR.reverse();
+  MR.reverse();
+
+  P = P.concat(PR);
+  M = M.concat(MR);
+
+  const curva = [P, M];
+  saveSessionStorageJSON('curva', curva);
+  plotCurva();  
+}
+function PM(dir, ancho, alto, barras){
+  let dirF = dir === "+";
+  let d = alto - 5;
   //Se definen las deformaciones unitarias con las que se genera la curva de interaccion:
   let eps = [-0.002, 0]; //Def unitarias del acero
   eps = eps.concat(linspace(0.00025, 0.02, 80));
@@ -79,8 +102,6 @@ function genCurvaInteraccion() {
   const phis = [];
 
   let PMax = 0;
-  let inter = true;
-
 
   //Se itera generando la curva de interaccion
   for (let i = 0; i < eps.length; i++) {
@@ -123,20 +144,21 @@ function genCurvaInteraccion() {
 
     for (let k = 0; k < barras.length; k++) {
       let b = barras[k];
-      let esi = b.y * (-ec + es) / d + ec;
+      let ybar = dirF ? b.y : (d-b.y);
+
+      let esi = ybar * (-ec + es) / d + ec;
       let fs = (Math.abs(Es * esi) <= fy ? Es * esi : Math.sign(esi) * fy) * b.Area;
       Fs += fs;
-      Ms += fs * (b.y - alto / 2.0);
+      Ms += fs * (ybar - alto / 2.0);
     }
 
     let Pi = (Fs + C);
-    let Mi = (Ms - C * (alto / 2 - a / 2));
+    let Mi = (dirF ? 1 : -1) * (Ms - C * (alto / 2 - a / 2));
 
     if (Pi > PMax && P[i - 1] < PMax) {
       //Se interpola para que termine en recta la curva de interaccion:
       Mi = (PMax - P[i - 1]) / (Pi - P[i - 1]) * (Mi - M[i - 1]) + M[i - 1];
       Pi = PMax;
-      inter = false;
     }
 
     P.push(Math.max(Pi, PMax));
@@ -146,21 +168,9 @@ function genCurvaInteraccion() {
 
   //Se invierte la carga axial a compresion positiva y se amplifican por phi:
   P = P.map((p, k) => p * -phis[k] / 1000); //tonf
-  M = M.map((m, k) => m * -phis[k] / 100 / 1000); //tonf-m
+  M = M.map((m, k) => m * phis[k] / 100 / 1000); //tonf-m
 
-  //Se agregan los mismos puntos al revez y M invertido por simetria de seccion:
-  const PRev = [...P];
-  const MRev = M.map(x => x * -1);
-
-  PRev.reverse();
-  MRev.reverse();
-
-  P = P.concat(PRev);
-  M = M.concat(MRev);
-
-  const curva = [P, M];
-  saveSessionStorageJSON('curva', curva);
-  plotCurva();  
+  return [P,M];
 }
 function isMayor10(dimension) {
   if (dimension <= 10) {
@@ -228,7 +238,7 @@ function plotBarrasTable(barras){
 
     //Se genera el select de la primera cantidad de barras:
     const selectCant = createSelect();
-
+    // selectCant.addEventListener('selectionchange',(el,ev)=>{selectionChanged(el);});
     //Se agregan las opciones de cantidad
     agregarCantidades(selectCant,barra.n);
 
@@ -249,6 +259,10 @@ function plotBarrasTable(barras){
 
     tr.appendChild(tdLocation);
     tableBarras.appendChild(tr);
+
+    
+    selectCant.addEventListener('change',actualizarBarras);
+    selectDiam.addEventListener('change',actualizarBarras);
   }
 }
 
@@ -293,15 +307,36 @@ function locationChanged(input){
   const d = parseInt(input.value);
   const alto = parseInt(inputAlto.value);
 
-  if(d<alto && d > 0){
-    input.classList.remove("error");
+  if(d <= alto - 5 && d >= 5){
+    actualizarBarras();
     return;
   }
 
-  //En caso contrario se abre el sweep:
-  input.classList.add("error")
-  
-  input.focus();
+  input.value = 5;
+  actualizarBarras();
+}
+
+function actualizarBarras(){
+  //Se identifica las filas
+  const filas = tableBarras.getElementsByTagName('tr');
+  let barras = []
+
+  for (const fila of filas) {
+    const tds = fila.getElementsByTagName('td');
+    if(tds.length === 0)
+      continue;
+
+    let cant = parseInt(tds[0].children[0].value);
+    let D = parseInt(tds[1].children[0].value);
+    let loc = parseInt(tds[2].children[0].value);
+    
+    let barraRow = new barra(cant,loc,D);
+    barras.push(barraRow);    
+  }
+
+  saveSessionStorageJSON('barras',barras);
+  genCurvaInteraccion();
+  DrawSection();
 }
 
 //Solo numeros enteros
@@ -325,7 +360,7 @@ function onlyNumberInt(evt) {
     if (theEvent.preventDefault) theEvent.preventDefault();
   }
 }
-//Solo numeros, positivos negativos puntos etc
+//Solo numeros, positivos negativos puntos etc|
 function cargaChanged(input) {
   var regex = /^[+-]?\d*\.?\d{0,9}$/;
   let value = input.value;
@@ -450,9 +485,59 @@ function verifyAnchoAlto() {
     return true;
 }
 
+function DrawSection(){
+  //Primer lugar se analizan si se encuentran todos los elementos:
+  let alto = parseInt(inputAlto.value) ?? 0;
+  let ancho = parseInt(inputAncho.value) ?? 0;
+  let barras = readSessionStorageJSON('barras');
+
+  if(alto === 0 || ancho === 0 || barras == null)
+    return;
+
+  //En caso contrario comienza el dibujo:
+  const context = canvas.getContext('2d');  
+
+  const W = context.canvas.width;
+  const H = context.canvas.height;
+  context.clearRect(0,0,W,H);
+
+  let factor = Math.min(H/alto,W/ancho);
+
+  //Se define el centro del elemento:
+  context.fillStyle = "#D9D9D6";
+  let xVal = W/2.0 - ancho * factor / 2.0;
+  let yVal = H / 2.0 - alto * factor / 2.0;
+  context.fillRect(xVal, yVal, ancho*factor, alto*factor);
+
+  context.fillStyle = "#043e7d";
+  context.strokeStyle = "#043e7d";
+  //Se generan las barras:
+  for (const b of barras) {
+    let radio = b.Diametro / 20.0;
+    //Coloca cada barra segun la cantidad:
+    let wid = ancho - 4 - 2*radio;
+    //Se busca la posicion de todas las barras:
+    let dl = wid / (b.n - 1);
+    let xPos = [];
+    for(let i = 0; i < b.n ; i++){
+      xPos.push(-wid / 2.0 + dl*i);
+    }
+
+    //Se dibujan todos los elementos:
+    for (const xp of xPos) {
+      let x = W / 2.0 + xp * factor;
+      let y = H - b.y * factor;
+      context.beginPath();
+      context.arc(x, y, radio * factor, 0, 2 * Math.PI);
+      context.fill();   
+      context.stroke();   
+    }
+  }
+}
+
 alto.addEventListener('blur', ()=>{
   //Se analiza si alto y ancho tiene valores correctos:
-  let alto = parseInt(inputAlto.value);
+  let alto = parseInt(inputAlto.value) || 0;
 
   if(!isMayor10(alto)){
     inputAlto.value = "";
@@ -465,7 +550,7 @@ alto.addEventListener('blur', ()=>{
     return;
   }
 
-  let rec = 2;
+  let rec = 5;
   
   let d = alto - rec
   const barras = readSessionStorageJSON('barras') ?? [new barra(2,d,16), new barra(2,rec,16)];
@@ -473,13 +558,13 @@ alto.addEventListener('blur', ()=>{
   //Se actualiza el grafico de barras:
   plotBarrasTable(barras);
   saveSessionStorageJSON('barras',barras);
-  
+  DrawSection();
   genCurvaInteraccion();
 })
 
 ancho.addEventListener('blur',()=>{
   //Se analiza si alto y ancho tiene valores correctos:
- let ancho = parseInt(inputAncho.value);
+ let ancho = parseInt(inputAncho.value) || 0;
 
  if(!isMayor10(ancho)){
     inputAncho.value = "";
@@ -492,15 +577,16 @@ ancho.addEventListener('blur',()=>{
   return;
  }
 
-  let rec = 2;
+  let rec = 5;
   let altoInt = parseInt(alto);
   let d = altoInt - rec
   const barras = readSessionStorageJSON('barras') ?? [new barra(2,d,16), new barra(2,rec,16)];
   plotBarrasTable(barras);
   saveSessionStorageJSON('barras',barras);  
-
+  DrawSection();
   genCurvaInteraccion();
 })
+
 
 //Se crea la lista de las cargas en caso que no exista:
 const cargas = readSessionStorageJSON('cargas') ?? [new carga(0, 0)];
@@ -518,7 +604,6 @@ if(barras != null){
 
   if(ancho == "" || alto == ""){
     //Se borran las barras existentes:
-    const barrasNew = [];
     sessionStorage.removeItem('barras');
     plotBarrasTable([]);
   }else{
